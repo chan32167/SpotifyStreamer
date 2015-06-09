@@ -10,6 +10,7 @@ import android.widget.BaseAdapter;
 import android.widget.TextView;
 
 import com.amstronghuang.spotifystreamer.R;
+import com.amstronghuang.spotifystreamer.model.TrackDataSimple;
 import com.facebook.drawee.backends.pipeline.Fresco;
 import com.facebook.drawee.interfaces.DraweeController;
 import com.facebook.drawee.view.SimpleDraweeView;
@@ -19,14 +20,12 @@ import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.List;
 
-import kaaes.spotify.webapi.android.models.Track;
-
 public class TopSongsAdapter extends BaseAdapter {
 
     private Context context;
-    private List<Track> trackList;
+    private List<TrackDataSimple> trackList;
 
-    public TopSongsAdapter(Context context, List<Track> trackList) {
+    public TopSongsAdapter(Context context, List<TrackDataSimple> trackList) {
         this.context = context;
         this.trackList = trackList;
     }
@@ -65,22 +64,17 @@ public class TopSongsAdapter extends BaseAdapter {
             holder = (ViewHolder) convertView.getTag();
         }
 
-        Track track = trackList.get(position);
+        TrackDataSimple track = trackList.get(position);
         if (track != null) {
-            holder.trackName.setText(track.name);
-            holder.albumName.setText(track.album.name);
+            holder.trackName.setText(track.getTrackName());
+            holder.albumName.setText(track.getAlbumName());
             Uri uri;
-            Uri smallUri = null;
-            if (track.album.images != null && !track.album.images.isEmpty()) {
-                if (track.album.images.size() > 1) {
-                    smallUri = Uri.parse(track.album.images.get(1).url);
-                }
-                uri = Uri.parse(track.album.images.get(0).url);
+            if (track.getImgUrl() != null) {
+                uri = Uri.parse(track.getImgUrl());
             } else {
                 uri = Uri.parse("res://drawable/" + R.drawable.nophotosmall);
             }
             DraweeController controller = Fresco.newDraweeControllerBuilder()
-                    .setLowResImageRequest(ImageRequest.fromUri(smallUri))
                     .setImageRequest(ImageRequest.fromUri(uri))
                     .setOldController(holder.albumDrawee.getController())
                     .build();

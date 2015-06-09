@@ -14,10 +14,10 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import com.amstronghuang.spotifystreamer.adapter.ArtistAdapter;
+import com.amstronghuang.spotifystreamer.model.ArtistDataSimple;
 import com.facebook.drawee.backends.pipeline.Fresco;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import butterknife.ButterKnife;
 import butterknife.InjectView;
@@ -43,7 +43,7 @@ public class MainActivity extends AppCompatActivity {
 
     protected ArtistAdapter artistAdapter;
 
-    protected List<Artist> artistList;
+    protected ArrayList<ArtistDataSimple> artistList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,7 +56,11 @@ public class MainActivity extends AppCompatActivity {
 
         final SpotifyService spotify = api.getService();
 
-        artistList = new ArrayList<>();
+        if (savedInstanceState == null || !savedInstanceState.containsKey("artistList")) {
+            artistList = new ArrayList<>();
+        } else {
+            artistList = savedInstanceState.getParcelableArrayList("artistList");
+        }
 
         artistAdapter = new ArtistAdapter(this, artistList);
 
@@ -66,9 +70,9 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Intent topSongsIntent = new Intent(MainActivity.this, TopSongsActivity.class);
-                Artist artist = (Artist) parent.getAdapter().getItem(position);
-                topSongsIntent.putExtra("idArtist", artist.id);
-                topSongsIntent.putExtra("artist", artist.name);
+                ArtistDataSimple artist = (ArtistDataSimple) parent.getAdapter().getItem(position);
+                topSongsIntent.putExtra("idArtist", artist.getId());
+                topSongsIntent.putExtra("artist", artist.getArtistName());
                 startActivity(topSongsIntent);
             }
         });
@@ -95,7 +99,9 @@ public class MainActivity extends AppCompatActivity {
                                 @Override
                                 public void success(ArtistsPager artistsPager, Response response) {
                                     artistList.clear();
-                                    artistList.addAll(artistsPager.artists.items);
+                                    for (Artist artist : artistsPager.artists.items) {
+                                        artistList.add(new ArtistDataSimple(artist.id, artist.images != null && !artist.images.isEmpty() ? artist.images.get(0).url : null, artist.name));
+                                    }
                                     MainActivity.this.runOnUiThread(new Runnable() {
                                         public void run() {
                                             artistAdapter.notifyDataSetChanged();
@@ -122,10 +128,15 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        outState.putParcelableArrayList("artistList", artistList);
+        super.onSaveInstanceState(outState);
+    }
+
+    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_main, menu);
-
         return true;
     }
 

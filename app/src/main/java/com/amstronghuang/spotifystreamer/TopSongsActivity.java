@@ -7,11 +7,11 @@ import android.view.MenuItem;
 import android.widget.ListView;
 
 import com.amstronghuang.spotifystreamer.adapter.TopSongsAdapter;
+import com.amstronghuang.spotifystreamer.model.TrackDataSimple;
 import com.facebook.drawee.backends.pipeline.Fresco;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import butterknife.ButterKnife;
@@ -32,16 +32,18 @@ public class TopSongsActivity extends AppCompatActivity {
 
     protected TopSongsAdapter topSongsAdapter;
 
-    protected List<Track> trackList;
+    protected ArrayList<TrackDataSimple> trackList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_top_songs);
-        getSupportActionBar().setTitle("Top Tracks");
-        getSupportActionBar().setSubtitle(getIntent().getStringExtra("artist"));
-        getSupportActionBar().setHomeButtonEnabled(true);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setTitle("Top Tracks");
+            getSupportActionBar().setSubtitle(getIntent().getStringExtra("artist"));
+            getSupportActionBar().setHomeButtonEnabled(true);
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        }
         ButterKnife.inject(this);
         Fresco.initialize(this);
 
@@ -49,7 +51,11 @@ public class TopSongsActivity extends AppCompatActivity {
 
         final SpotifyService spotify = api.getService();
 
-        trackList = new ArrayList<>();
+        if (savedInstanceState == null || !savedInstanceState.containsKey("trackList")) {
+            trackList = new ArrayList<>();
+        } else {
+            trackList = savedInstanceState.getParcelableArrayList("trackList");
+        }
 
         topSongsAdapter = new TopSongsAdapter(this, trackList);
 
@@ -62,11 +68,15 @@ public class TopSongsActivity extends AppCompatActivity {
             @Override
             public void success(Tracks tracks, Response response) {
                 trackList.clear();
-                trackList.addAll(tracks.tracks);
+                for (Track track : tracks.tracks) {
+                    trackList.add(new TrackDataSimple(track.id, track.album.images != null && !track.album.images.isEmpty() ? track.album.images.get(0).url : null, track.album.name, track.name));
+                }
                 TopSongsActivity.this.runOnUiThread(new Runnable() {
                     public void run() {
                         topSongsAdapter.notifyDataSetChanged();
-                        getSupportActionBar().setTitle("Top " + trackList.size() + " Track");
+                        if (getSupportActionBar() != null) {
+                            getSupportActionBar().setTitle("Top " + trackList.size() + " Track");
+                        }
                     }
                 });
             }
@@ -79,10 +89,15 @@ public class TopSongsActivity extends AppCompatActivity {
     }
 
     @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        outState.putParcelableArrayList("trackList", trackList);
+        super.onSaveInstanceState(outState);
+    }
+
+    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_main, menu);
-
         return true;
     }
 

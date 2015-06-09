@@ -10,6 +10,7 @@ import android.widget.BaseAdapter;
 import android.widget.TextView;
 
 import com.amstronghuang.spotifystreamer.R;
+import com.amstronghuang.spotifystreamer.model.ArtistDataSimple;
 import com.facebook.drawee.backends.pipeline.Fresco;
 import com.facebook.drawee.interfaces.DraweeController;
 import com.facebook.drawee.view.SimpleDraweeView;
@@ -19,14 +20,12 @@ import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.List;
 
-import kaaes.spotify.webapi.android.models.Artist;
-
 public class ArtistAdapter extends BaseAdapter {
 
     private Context context;
-    private List<Artist> artistArrayList;
+    private List<ArtistDataSimple> artistArrayList;
 
-    public ArtistAdapter(Context context, List<Artist> artistArrayList) {
+    public ArtistAdapter(Context context, List<ArtistDataSimple> artistArrayList) {
         this.context = context;
         this.artistArrayList = artistArrayList;
     }
@@ -64,22 +63,16 @@ public class ArtistAdapter extends BaseAdapter {
             holder = (ViewHolder) convertView.getTag();
         }
 
-        Artist artist = artistArrayList.get(position);
+        ArtistDataSimple artist = artistArrayList.get(position);
         if (artist != null) {
-            holder.artistName.setText(artist.name);
+            holder.artistName.setText(artist.getArtistName());
             Uri uri;
-            Uri smallUri = null;
-            if (artist.images != null && !artist.images.isEmpty()) {
-                if (artist.images.size() > 1) {
-                    smallUri = Uri.parse(artist.images.get(1).url);
-                }
-                uri = Uri.parse(artist.images.get(0).url);
-
+            if (artist.getImgUrl() != null) {
+                uri = Uri.parse(artist.getImgUrl());
             } else {
                 uri = Uri.parse("res://drawable/" + R.drawable.nophotosmall);
             }
             DraweeController controller = Fresco.newDraweeControllerBuilder()
-                    .setLowResImageRequest(ImageRequest.fromUri(smallUri))
                     .setImageRequest(ImageRequest.fromUri(uri))
                     .setOldController(holder.artistDrawee.getController())
                     .build();
