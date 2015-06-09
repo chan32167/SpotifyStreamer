@@ -1,14 +1,17 @@
 package com.amstronghuang.spotifystreamer;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.TextView;
 
 import com.amstronghuang.spotifystreamer.adapter.ArtistAdapter;
 import com.facebook.drawee.backends.pipeline.Fresco;
@@ -20,7 +23,6 @@ import butterknife.ButterKnife;
 import butterknife.InjectView;
 import kaaes.spotify.webapi.android.SpotifyApi;
 import kaaes.spotify.webapi.android.SpotifyService;
-import kaaes.spotify.webapi.android.models.Album;
 import kaaes.spotify.webapi.android.models.Artist;
 import kaaes.spotify.webapi.android.models.ArtistsPager;
 import retrofit.Callback;
@@ -35,6 +37,9 @@ public class MainActivity extends AppCompatActivity {
 
     @InjectView(R.id.searchET)
     protected EditText searchET;
+
+    @InjectView(R.id.messageTV)
+    protected TextView messageTV;
 
     protected ArtistAdapter artistAdapter;
 
@@ -57,7 +62,16 @@ public class MainActivity extends AppCompatActivity {
 
         artistsLV.setAdapter(artistAdapter);
 
-        spotify.getArtistTopTrack("");
+        artistsLV.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                Intent topSongsIntent = new Intent(MainActivity.this, TopSongsActivity.class);
+                Artist artist = (Artist) parent.getAdapter().getItem(position);
+                topSongsIntent.putExtra("idArtist", artist.id);
+                topSongsIntent.putExtra("artist", artist.name);
+                startActivity(topSongsIntent);
+            }
+        });
 
         searchET.addTextChangedListener(new TextWatcher() {
             @Override
@@ -72,45 +86,39 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void afterTextChanged(Editable s) {
-                spotify.searchArtists(s.toString(), new Callback<ArtistsPager>() {
-                            @Override
-                            public void success(ArtistsPager artistsPager, Response response) {
-                                artistList.clear();
-                                artistList.addAll(artistsPager.artists.items);
-                                MainActivity.this.runOnUiThread(new Runnable() {
-                                    public void run() {
-                                        artistAdapter.notifyDataSetChanged();
-                                    }
-                                });
+                if (s.toString().isEmpty()) {
+                    artistList.clear();
+                    artistAdapter.notifyDataSetChanged();
+                    messageTV.setText("");
+                } else {
+                    spotify.searchArtists(s.toString(), new Callback<ArtistsPager>() {
+                                @Override
+                                public void success(ArtistsPager artistsPager, Response response) {
+                                    artistList.clear();
+                                    artistList.addAll(artistsPager.artists.items);
+                                    MainActivity.this.runOnUiThread(new Runnable() {
+                                        public void run() {
+                                            artistAdapter.notifyDataSetChanged();
+                                            if (artistList.isEmpty()) {
+                                                messageTV.setText("No results, please refine search");
+                                            } else {
+                                                messageTV.setText("");
+                                            }
+                                        }
+                                    });
+                                }
 
+                                @Override
+                                public void failure(RetrofitError error) {
+
+                                }
                             }
 
-                            @Override
-                            public void failure(RetrofitError error) {
-
-                            }
-                        }
-
-                );
+                    );
+                }
             }
         });
 
-
-        spotify.getAlbum("2dIGnmEIy1WZIcZCFSj6i8", new Callback<Album>()
-
-                {
-                    @Override
-                    public void success(Album album, Response response) {
-                        Log.d("Album success", album.name);
-                    }
-
-                    @Override
-                    public void failure(RetrofitError error) {
-                        Log.d("Album failure", error.toString());
-                    }
-                }
-
-        );
     }
 
     @Override
