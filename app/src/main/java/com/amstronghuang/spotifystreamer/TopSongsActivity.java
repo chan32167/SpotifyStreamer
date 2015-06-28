@@ -1,9 +1,12 @@
 package com.amstronghuang.spotifystreamer;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ListView;
 
 import com.amstronghuang.spotifystreamer.adapter.TopSongsAdapter;
@@ -32,7 +35,7 @@ public class TopSongsActivity extends AppCompatActivity {
 
     protected TopSongsAdapter topSongsAdapter;
 
-    protected ArrayList<TrackDataSimple> trackList;
+    protected ArrayList<TrackDataSimple> trackDataSimpleList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,13 +54,13 @@ public class TopSongsActivity extends AppCompatActivity {
 
         final SpotifyService spotify = api.getService();
 
-        if (savedInstanceState == null || !savedInstanceState.containsKey("trackList")) {
-            trackList = new ArrayList<>();
+        if (savedInstanceState == null || !savedInstanceState.containsKey("trackDataSimpleList")) {
+            trackDataSimpleList = new ArrayList<>();
         } else {
-            trackList = savedInstanceState.getParcelableArrayList("trackList");
+            trackDataSimpleList = savedInstanceState.getParcelableArrayList("trackDataSimpleList");
         }
 
-        topSongsAdapter = new TopSongsAdapter(this, trackList);
+        topSongsAdapter = new TopSongsAdapter(this, trackDataSimpleList);
 
         artistsLV.setAdapter(topSongsAdapter);
 
@@ -67,15 +70,15 @@ public class TopSongsActivity extends AppCompatActivity {
         spotify.getArtistTopTrack(getIntent().getStringExtra("idArtist"), extraData, new Callback<Tracks>() {
             @Override
             public void success(Tracks tracks, Response response) {
-                trackList.clear();
+                trackDataSimpleList.clear();
                 for (Track track : tracks.tracks) {
-                    trackList.add(new TrackDataSimple(track.id, track.album.images != null && !track.album.images.isEmpty() ? track.album.images.get(0).url : null, track.album.name, track.name));
+                    trackDataSimpleList.add(new TrackDataSimple(track.id, track.album.images != null && !track.album.images.isEmpty() ? track.album.images.get(0).url : null, track.album.name, track.name, track.artists.get(0).name, track.preview_url));
                 }
                 TopSongsActivity.this.runOnUiThread(new Runnable() {
                     public void run() {
                         topSongsAdapter.notifyDataSetChanged();
                         if (getSupportActionBar() != null) {
-                            getSupportActionBar().setTitle("Top " + trackList.size() + " Track");
+                            getSupportActionBar().setTitle("Top " + trackDataSimpleList.size() + " Track");
                         }
                     }
                 });
@@ -86,11 +89,21 @@ public class TopSongsActivity extends AppCompatActivity {
 
             }
         });
+
+        artistsLV.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                Intent musicPlayerIntent = new Intent(TopSongsActivity.this, MusicPlayerActivity.class);
+                musicPlayerIntent.putExtra("position", position);
+                musicPlayerIntent.putParcelableArrayListExtra("trackDataSimpleList", trackDataSimpleList);
+                startActivity(musicPlayerIntent);
+            }
+        });
     }
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
-        outState.putParcelableArrayList("trackList", trackList);
+        outState.putParcelableArrayList("trackDataSimpleList", trackDataSimpleList);
         super.onSaveInstanceState(outState);
     }
 

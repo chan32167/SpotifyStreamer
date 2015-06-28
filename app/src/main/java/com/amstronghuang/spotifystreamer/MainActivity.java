@@ -2,6 +2,7 @@ package com.amstronghuang.spotifystreamer;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -45,16 +46,28 @@ public class MainActivity extends AppCompatActivity {
 
     protected ArrayList<ArtistDataSimple> artistList;
 
+    private String searchText;
+
+    SpotifyApi api = new SpotifyApi();
+
+    SpotifyService spotify = api.getService();
+
+    private Handler handler = new Handler();
+
+    private Runnable runnable = new Runnable() {
+        @Override
+        public void run() {
+            searchArtist();
+        }
+    };
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         ButterKnife.inject(this);
         Fresco.initialize(this);
-
-        SpotifyApi api = new SpotifyApi();
-
-        final SpotifyService spotify = api.getService();
 
         if (savedInstanceState == null || !savedInstanceState.containsKey("artistList")) {
             artistList = new ArrayList<>();
@@ -90,41 +103,47 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void afterTextChanged(Editable s) {
+                searchText = s.toString();
                 if (s.toString().isEmpty()) {
                     artistList.clear();
                     artistAdapter.notifyDataSetChanged();
                     messageTV.setText("");
                 } else {
-                    spotify.searchArtists(s.toString(), new Callback<ArtistsPager>() {
-                                @Override
-                                public void success(ArtistsPager artistsPager, Response response) {
-                                    artistList.clear();
-                                    for (Artist artist : artistsPager.artists.items) {
-                                        artistList.add(new ArtistDataSimple(artist.id, artist.images != null && !artist.images.isEmpty() ? artist.images.get(0).url : null, artist.name));
-                                    }
-                                    MainActivity.this.runOnUiThread(new Runnable() {
-                                        public void run() {
-                                            artistAdapter.notifyDataSetChanged();
-                                            if (artistList.isEmpty()) {
-                                                messageTV.setText("No results, please refine search");
-                                            } else {
-                                                messageTV.setText("");
-                                            }
-                                        }
-                                    });
-                                }
-
-                                @Override
-                                public void failure(RetrofitError error) {
-
-                                }
-                            }
-
-                    );
+                    handler.removeCallbacks(runnable);
+                    handler.postDelayed(runnable, 300);
                 }
             }
         });
 
+    }
+
+    private void searchArtist(){
+        spotify.searchArtists(searchText, new Callback<ArtistsPager>() {
+                    @Override
+                    public void success(ArtistsPager artistsPager, Response response) {
+                        artistList.clear();
+                        for (Artist artist : artistsPager.artists.items) {
+                            artistList.add(new ArtistDataSimple(artist.id, artist.images != null && !artist.images.isEmpty() ? artist.images.get(0).url : null, artist.name));
+                        }
+                        MainActivity.this.runOnUiThread(new Runnable() {
+                            public void run() {
+                                artistAdapter.notifyDataSetChanged();
+                                if (artistList.isEmpty()) {
+                                    messageTV.setText("No results, please refine search");
+                                } else {
+                                    messageTV.setText("");
+                                }
+                            }
+                        });
+                    }
+
+                    @Override
+                    public void failure(RetrofitError error) {
+
+                    }
+                }
+
+        );
     }
 
     @Override

@@ -21,12 +21,16 @@ public class TrackDataSimple implements Parcelable {
     private String imgUrl;
     private String albumName;
     private String trackName;
+    private String artistName;
+    private String demoTrackUrl;
 
-    public TrackDataSimple(String id, String imgUrl, String albumName, String trackName) {
+    public TrackDataSimple(String id, String imgUrl, String albumName, String trackName, String artistName, String demoTrackUrl) {
         this.id = id;
         this.imgUrl = imgUrl;
         this.albumName = albumName;
         this.trackName = trackName;
+        this.artistName = artistName;
+        this.demoTrackUrl = demoTrackUrl;
     }
 
     private TrackDataSimple(Parcel in) {
@@ -34,6 +38,8 @@ public class TrackDataSimple implements Parcelable {
         imgUrl = in.readString();
         albumName = in.readString();
         trackName = in.readString();
+        artistName = in.readString();
+        demoTrackUrl = in.readString();
     }
 
     @Override
@@ -47,6 +53,8 @@ public class TrackDataSimple implements Parcelable {
         dest.writeString(imgUrl);
         dest.writeString(albumName);
         dest.writeString(trackName);
+        dest.writeString(artistName);
+        dest.writeString(demoTrackUrl);
     }
 
     public String getImgUrl() {
@@ -63,6 +71,14 @@ public class TrackDataSimple implements Parcelable {
 
     public String getId() {
         return id;
+    }
+
+    public String getArtistName() {
+        return artistName;
+    }
+
+    public String getDemoTrackUrl() {
+        return demoTrackUrl;
     }
 }
 
