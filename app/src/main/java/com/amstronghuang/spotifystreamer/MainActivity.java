@@ -9,7 +9,7 @@ import android.view.MenuItem;
 import butterknife.ButterKnife;
 
 
-public class MainActivity extends AppCompatActivity implements SearchFragment.ArtistSearchFragmentCallback{
+public class MainActivity extends AppCompatActivity implements SearchFragment.ArtistSearchFragmentCallback {
 
     boolean mTwoPane;
 
@@ -45,15 +45,13 @@ public class MainActivity extends AppCompatActivity implements SearchFragment.Ar
 
     @Override
     public void onItemSelected(String artistID, String artistName) {
-        if (mTwoPane)
-        {
-            //TopSongsFragment topTracksFragment =
-             //       TopSongsFragment.newInstance(artistID, artistName);
+        if (mTwoPane) {
+            TopSongsFragment topTracksFragment =
+                    TopSongsFragment.newInstance(artistID, artistName);
 
-            //getSupportFragmentManager().beginTransaction()
-             //       .replace(R.id.top_tracks_container, topTracksFragment).commit();
-        } else
-        {
+            getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.track_detail_container, topTracksFragment).commit();
+        } else {
             Intent topSongsIntent = new Intent(this, TopSongsActivity.class);
             //ArtistDataSimple artist = (ArtistDataSimple) parent.getAdapter().getItem(position);
             topSongsIntent.putExtra("idArtist", artistID);
