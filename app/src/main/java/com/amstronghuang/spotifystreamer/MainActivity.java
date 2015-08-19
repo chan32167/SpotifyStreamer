@@ -18,7 +18,7 @@ public class MainActivity extends AppCompatActivity implements SearchFragment.Ar
         super.onCreate(savedInstanceState);
         mTwoPane = getResources().getBoolean(R.bool.sw600);
         setContentView(R.layout.activity_main);
-        ButterKnife.inject(this);
+        ButterKnife.bind(this);
     }
 
     @Override

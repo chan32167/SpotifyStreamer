@@ -20,7 +20,7 @@ import com.facebook.drawee.backends.pipeline.Fresco;
 import java.util.ArrayList;
 
 import butterknife.ButterKnife;
-import butterknife.InjectView;
+import butterknife.Bind;
 import kaaes.spotify.webapi.android.SpotifyApi;
 import kaaes.spotify.webapi.android.SpotifyService;
 import kaaes.spotify.webapi.android.models.Artist;
@@ -32,13 +32,13 @@ import retrofit.client.Response;
 
 public class SearchFragment extends Fragment {
 
-    @InjectView(R.id.artistsLV)
+    @Bind(R.id.artistsLV)
     protected ListView artistsLV;
 
-    @InjectView(R.id.searchET)
+    @Bind(R.id.searchET)
     protected EditText searchET;
 
-    @InjectView(R.id.messageTV)
+    @Bind(R.id.messageTV)
     protected TextView messageTV;
 
     protected ArtistAdapter artistAdapter;
@@ -67,7 +67,7 @@ public class SearchFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_search_main, container, false);
-        ButterKnife.inject(this, rootView);
+        ButterKnife.bind(this, rootView);
         Fresco.initialize(this.getActivity());
 
         if (savedInstanceState == null || !savedInstanceState.containsKey("artistList")) {
