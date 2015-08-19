@@ -5,16 +5,10 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 
-import com.amstronghuang.spotifystreamer.model.TrackDataSimple;
-
-import java.util.ArrayList;
-
 import butterknife.ButterKnife;
 
 
 public class TopSongsActivity extends AppCompatActivity {
-
-    protected ArrayList<TrackDataSimple> trackDataSimpleList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -28,16 +22,19 @@ public class TopSongsActivity extends AppCompatActivity {
         }
         ButterKnife.inject(this);
 
-        TopSongsFragment topTracksFragment =
-                TopSongsFragment.newInstance(getIntent().getStringExtra("idArtist"), getIntent().getStringExtra("artis"));
+        if (savedInstanceState == null) {
+            TopSongsFragment topTracksFragment =
+                    TopSongsFragment.newInstance(getIntent().getStringExtra("idArtist"), getIntent().getStringExtra("artis"));
+            // Display the fragment as the main content.
+            getSupportFragmentManager().beginTransaction()
+                    .replace(android.R.id.content, topTracksFragment)
+                    .commit();
+        }
 
-        getSupportFragmentManager().beginTransaction()
-                .replace(R.id.track_detail_container, topTracksFragment).commit();
     }
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
-        outState.putParcelableArrayList("trackDataSimpleList", trackDataSimpleList);
         super.onSaveInstanceState(outState);
     }
 

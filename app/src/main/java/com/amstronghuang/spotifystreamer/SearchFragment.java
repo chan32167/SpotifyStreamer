@@ -56,14 +56,16 @@ public class SearchFragment extends Fragment {
     private Runnable runnable = new Runnable() {
         @Override
         public void run() {
-            searchArtist();
+            if(getActivity() != null) {
+                searchArtist();
+            }
         }
     };
 
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState){
+                             Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_search_main, container, false);
         ButterKnife.inject(this, rootView);
         Fresco.initialize(this.getActivity());
@@ -113,7 +115,7 @@ public class SearchFragment extends Fragment {
         return rootView;
     }
 
-    private void searchArtist(){
+    private void searchArtist() {
         spotify.searchArtists(searchText, new Callback<ArtistsPager>() {
                     @Override
                     public void success(ArtistsPager artistsPager, Response response) {
@@ -121,6 +123,7 @@ public class SearchFragment extends Fragment {
                         for (Artist artist : artistsPager.artists.items) {
                             artistList.add(new ArtistDataSimple(artist.id, artist.images != null && !artist.images.isEmpty() ? artist.images.get(0).url : null, artist.name));
                         }
+
                         getActivity().runOnUiThread(new Runnable() {
                             public void run() {
                                 artistAdapter.notifyDataSetChanged();
@@ -131,6 +134,7 @@ public class SearchFragment extends Fragment {
                                 }
                             }
                         });
+
                     }
 
                     @Override
@@ -148,8 +152,7 @@ public class SearchFragment extends Fragment {
         super.onSaveInstanceState(outState);
     }
 
-    public interface ArtistSearchFragmentCallback
-    {
+    public interface ArtistSearchFragmentCallback {
         void onItemSelected(String artistID, String artistName);
     }
 

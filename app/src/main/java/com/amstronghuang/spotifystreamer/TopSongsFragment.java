@@ -3,6 +3,7 @@ package com.amstronghuang.spotifystreamer;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -60,8 +61,10 @@ public class TopSongsFragment extends Fragment {
         final SpotifyService spotify = api.getService();
 
         if (savedInstanceState == null || !savedInstanceState.containsKey("trackDataSimpleList")) {
+            Log.d("aca", "kk");
             trackDataSimpleList = new ArrayList<>();
         } else {
+            Log.d("aca", "kk111111111111111111");
             trackDataSimpleList = savedInstanceState.getParcelableArrayList("trackDataSimpleList");
         }
 
@@ -84,12 +87,14 @@ public class TopSongsFragment extends Fragment {
                     for (Track track : tracks.tracks) {
                         trackDataSimpleList.add(new TrackDataSimple(track.id, track.album.images != null && !track.album.images.isEmpty() ? track.album.images.get(0).url : null, track.album.name, track.name, track.artists.get(0).name, track.preview_url));
                     }
-                    TopSongsFragment.this.getActivity().runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            topSongsAdapter.notifyDataSetChanged();
-                        }
-                    });
+                    if(getActivity() != null) {
+                        getActivity().runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                topSongsAdapter.notifyDataSetChanged();
+                            }
+                        });
+                    }
                 }
 
                 @Override
