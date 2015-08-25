@@ -11,6 +11,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
+import android.widget.ImageButton;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -21,6 +22,7 @@ import com.facebook.drawee.view.SimpleDraweeView;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.concurrent.TimeUnit;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
@@ -29,34 +31,44 @@ import butterknife.OnClick;
 
 public class MusicPlayerFragment extends DialogFragment {
 
-    private ArrayList<TrackDataSimple> trackDataSimpleList;
-    private int position;
-    private TrackDataSimple trackDataSimple;
-
-    private MediaPlayer mediaPlayer;
-
-    private Handler handler = new Handler();
-
-    private double timeElapsed = 0, finalTime = 0;
-
-    private boolean readyToPlay = false;
-
     @Bind(R.id.artistNameTV)
     protected TextView artistNameTV;
     @Bind(R.id.albumNameTV)
     protected TextView albumNameTV;
     @Bind(R.id.trackNameTV)
     protected TextView trackNameTV;
-
     @Bind(R.id.seekBar)
     protected SeekBar seekBar;
-
     @Bind(R.id.albumDrawee)
     protected SimpleDraweeView albumDrawee;
+    @Bind(R.id.playPauseIB)
+    protected ImageButton playPauseButton;
+    @Bind(R.id.play_track_current_time)
+    protected TextView currentTime;
+    @Bind(R.id.play_track_total_time)
+    protected TextView totalTime;
+    private ArrayList<TrackDataSimple> trackDataSimpleList;
+    private int position;
+    private TrackDataSimple trackDataSimple;
+    private MediaPlayer mediaPlayer;
+    private Handler handler = new Handler();
+    private double timeElapsed = 0, finalTime = 0;
+    private boolean readyToPlay = false;
+    private Runnable updateSeekBarTime = new Runnable() {
+        public void run() {
+            //get current position
+            timeElapsed = mediaPlayer.getCurrentPosition();
+            //set seekbar progress
+            seekBar.setProgress((int) timeElapsed);
+            currentTime.setText(transformToTime((long) timeElapsed));
+            //repeat yourself that again in 100 miliseconds
+            if (mediaPlayer.isPlaying()) {
+                handler.postDelayed(this, 100);
+            }
+        }
+    };
 
-
-    public static MusicPlayerFragment newInstance(ArrayList<TrackDataSimple> trackDataSimpleList, int position)
-    {
+    public static MusicPlayerFragment newInstance(ArrayList<TrackDataSimple> trackDataSimpleList, int position) {
         MusicPlayerFragment fragment = new MusicPlayerFragment();
 
         Bundle args = new Bundle();
@@ -79,7 +91,12 @@ public class MusicPlayerFragment extends DialogFragment {
 
         mediaPlayer = new MediaPlayer();
         mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
-        seekBar.setClickable(false);
+        mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+            @Override
+            public void onCompletion(MediaPlayer mp) {
+                setPlayButton();
+            }
+        });
         setTrackData();
         return rootView;
     }
@@ -93,18 +110,47 @@ public class MusicPlayerFragment extends DialogFragment {
         albumDrawee.setImageURI(Uri.parse(trackDataSimple.getImgUrl()));
 
         mediaPlayer.reset();
+        setPlayButton();
         handler.post(new Runnable() {
             @Override
             public void run() {
                 try {
                     mediaPlayer.setDataSource(trackDataSimple.getDemoTrackUrl());
                     mediaPlayer.prepareAsync();
+                    seekBar.setEnabled(false);
                     mediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
                         @Override
                         public void onPrepared(MediaPlayer mp) {
                             readyToPlay = true;
+                            seekBar.setEnabled(true);
                             finalTime = mediaPlayer.getDuration();
                             seekBar.setMax((int) finalTime);
+                            totalTime.setText(transformToTime((long) finalTime));
+                            seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+                                private boolean wasPlaying = false;
+
+                                @Override
+                                public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                                }
+
+                                @Override
+                                public void onStartTrackingTouch(SeekBar seekBar) {
+                                    wasPlaying = mediaPlayer.isPlaying();
+                                    if (wasPlaying) {
+                                        mediaPlayer.pause();
+                                    }
+                                }
+
+                                @Override
+                                public void onStopTrackingTouch(SeekBar seekBar) {
+                                    int progress = seekBar.getProgress();
+                                    mediaPlayer.seekTo(progress);
+                                    if (wasPlaying) {
+                                        mediaPlayer.start();
+                                        handler.postDelayed(updateSeekBarTime, 100);
+                                    }
+                                }
+                            });
                         }
                     });
                 } catch (IOException e) {
@@ -114,27 +160,35 @@ public class MusicPlayerFragment extends DialogFragment {
         });
     }
 
-    @OnClick(R.id.playIB)
-    public void play(View view) {
+    @OnClick(R.id.playPauseIB)
+    public void playPause(View view) {
         if (readyToPlay) {
-            mediaPlayer.start();
-            timeElapsed = mediaPlayer.getCurrentPosition();
-            seekBar.setProgress((int) timeElapsed);
-            handler.postDelayed(updateSeekBarTime, 100);
+            if (mediaPlayer.isPlaying()) {
+                mediaPlayer.pause();
+                setPlayButton();
+            } else {
+                mediaPlayer.start();
+                timeElapsed = mediaPlayer.getCurrentPosition();
+                seekBar.setProgress((int) timeElapsed);
+                handler.postDelayed(updateSeekBarTime, 100);
+                setPauseButton();
+            }
         } else {
             Toast.makeText(this.getActivity(), "Loading song... retry in a few seconds", Toast.LENGTH_SHORT).show();
         }
-
     }
 
-    @OnClick(R.id.pauseIB)
-    public void pause(View view) {
-        mediaPlayer.pause();
+    private void setPauseButton() {
+        playPauseButton.setImageResource(android.R.drawable.ic_media_pause);
+    }
+
+    private void setPlayButton() {
+        playPauseButton.setImageResource(android.R.drawable.ic_media_play);
     }
 
     @OnClick(R.id.nextIB)
     public void next(View view) {
-        if (position < trackDataSimpleList.size()) {
+        if (position < trackDataSimpleList.size() - 1) {
             position++;
             setTrackData();
         } else {
@@ -152,18 +206,6 @@ public class MusicPlayerFragment extends DialogFragment {
         }
     }
 
-    private Runnable updateSeekBarTime = new Runnable() {
-        public void run() {
-            //get current position
-            timeElapsed = mediaPlayer.getCurrentPosition();
-            //set seekbar progress
-            seekBar.setProgress((int) timeElapsed);
-
-            //repeat yourself that again in 100 miliseconds
-            handler.postDelayed(this, 100);
-        }
-    };
-
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         // The only reason you might override this method when using onCreateView() is
@@ -173,6 +215,20 @@ public class MusicPlayerFragment extends DialogFragment {
         Dialog dialog = super.onCreateDialog(savedInstanceState);
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         return dialog;
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        mediaPlayer.reset();
+    }
+
+    private String transformToTime(long duration) {
+        return String.format("%d min, %d sec",
+                TimeUnit.MILLISECONDS.toMinutes(duration),
+                TimeUnit.MILLISECONDS.toSeconds(duration) -
+                        TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(duration))
+        );
     }
 
 }

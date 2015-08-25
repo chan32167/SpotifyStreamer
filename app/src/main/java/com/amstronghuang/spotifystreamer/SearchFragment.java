@@ -19,8 +19,8 @@ import com.facebook.drawee.backends.pipeline.Fresco;
 
 import java.util.ArrayList;
 
-import butterknife.ButterKnife;
 import butterknife.Bind;
+import butterknife.ButterKnife;
 import kaaes.spotify.webapi.android.SpotifyApi;
 import kaaes.spotify.webapi.android.SpotifyService;
 import kaaes.spotify.webapi.android.models.Artist;
@@ -44,19 +44,15 @@ public class SearchFragment extends Fragment {
     protected ArtistAdapter artistAdapter;
 
     protected ArrayList<ArtistDataSimple> artistList;
-
-    private String searchText;
-
     SpotifyApi api = new SpotifyApi();
-
     SpotifyService spotify = api.getService();
-
+    private String searchText;
     private Handler handler = new Handler();
 
     private Runnable runnable = new Runnable() {
         @Override
         public void run() {
-            if(getActivity() != null) {
+            if (getActivity() != null) {
                 searchArtist();
             }
         }

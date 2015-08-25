@@ -17,11 +17,9 @@ import butterknife.ButterKnife;
 
 public class MusicPlayerActivity extends AppCompatActivity {
 
-    private ArrayList<TrackDataSimple> trackDataSimpleList;
-
     MusicPlayerFragment musicPlayerFragment;
-
     boolean mTwoPane;
+    private ArrayList<TrackDataSimple> trackDataSimpleList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -30,7 +28,7 @@ public class MusicPlayerActivity extends AppCompatActivity {
         mTwoPane = getResources().getBoolean(R.bool.sw600);
 
         if (getSupportActionBar() != null) {
-            getSupportActionBar().setTitle("Top Tracks");
+            getSupportActionBar().setTitle("Music Player");
             getSupportActionBar().setSubtitle(getIntent().getStringExtra("artist"));
             getSupportActionBar().setHomeButtonEnabled(true);
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -60,8 +58,8 @@ public class MusicPlayerActivity extends AppCompatActivity {
             transaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
             // To make it fullscreen, use the 'content' root view as the container
             // for the fragment, which is always the root view for the activity
-            transaction.replace(android.R.id.content, musicPlayerFragment)
-                    .addToBackStack(null).commit();
+            transaction.replace(R.id.play_track_container, musicPlayerFragment)
+                    .commit();
         }
     }
 
