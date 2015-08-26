@@ -9,6 +9,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import com.amstronghuang.spotifystreamer.adapter.TopSongsAdapter;
 import com.amstronghuang.spotifystreamer.model.TrackDataSimple;
@@ -92,6 +93,9 @@ public class TopSongsFragment extends Fragment {
                             @Override
                             public void run() {
                                 topSongsAdapter.notifyDataSetChanged();
+                                if(trackDataSimpleList.isEmpty()){
+                                    Toast.makeText(getActivity(),"No songs found",Toast.LENGTH_SHORT).show();
+                                }
                             }
                         });
                     }
